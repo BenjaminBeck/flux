@@ -161,7 +161,6 @@ class ContentService implements SingletonInterface {
 			// EXT:gridelements support
 			list($relativeTo, $colPos) = explode('x', $relativeTo);
 			$row['tx_flux_column'] = $row['tx_flux_parent'] = NULL;
-			$row['colPos'] = $colPos;
 			$row['sorting'] = 0;
 		} elseif (0 <= intval($relativeTo)) {
 			$row['tx_flux_column'] = $row['tx_flux_parent'] = NULL;

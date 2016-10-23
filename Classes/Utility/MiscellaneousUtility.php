@@ -36,32 +36,16 @@ class MiscellaneousUtility
     private static $iconFactory;
 
     /**
-     * @param integer $contentElementUid
-     * @param string $areaName
-     * @return integer
-     */
-    public static function generateUniqueIntegerForFluxArea_o($contentElementUid, $areaName)
-    {
-        foreach (str_split($areaName) as $index => $letter) {
-            $position = $index + 1;
-            $integers[] = $position*ord($letter);
-        }
-        $integers[] = (int) $contentElementUid;
-        $integers[] = self::UNIQUE_INTEGER_OVERHEAD;
-        return 0 - array_sum($integers);
-    }
-
-	/**
      * @param array $columnIds
      * @return integer
      */
-    public static function generateUniqueIntegerForFluxArea(array $columnIds)
+    public static function generateRandomUniqueIntegerForFluxArea(array $columnIds)
     {
-		$integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
-		while(in_array($integer,$columnIds)){
-			$integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
-		}
-		return 0 - $integer;
+        $integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
+        while (in_array($integer, $columnIds)) {
+            $integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
+        }
+        return 0 - $integer;
     }
 
     /**

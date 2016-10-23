@@ -424,26 +424,25 @@ class ContentService implements SingletonInterface
         }
     }
 
+
     /**
      * @codeCoverageIgnore
+     *
      * @param integer $relativeTo
+     *
      * @return array
+     * @throws \Exception
      */
-    protected function getTargetAreaStoredInSession_o($relativeTo)
+    protected function getTargetAreaStoredInSession($relativeTo)
     {
         '' !== session_id() ? : session_start();
-        return $_SESSION['target' . $relativeTo];
+        foreach ($_SESSION['tx_flux']['column_ids'] as $data) {
+            if (isset($data['sessionAreaIntegerId']) && $data['sessionAreaIntegerId']==$relativeTo) {
+                return array_values($data);
+            }
+        }
+        throw new \Exception('tx_flux: getTargetAreaStoredInSession could not find data in session variable');
     }
-
-	protected function getTargetAreaStoredInSession($relativeTo) {
-		'' !== session_id() ? : session_start();
-		foreach($_SESSION['tx_flux']['column_ids'] as $data){
-			if(isset($data['sessionAreaIntegerId']) && $data['sessionAreaIntegerId']==$relativeTo){
-				return array_values($data);
-			}
-		}
-		throw new \Exception('tx_flux: getTargetAreaStoredInSession could not find data in session variable');
-	}
 
 
 

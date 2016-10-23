@@ -688,7 +688,7 @@ class PreviewView
      * @param string $areaName
      * @return integer
      */
-    protected function registerTargetContentAreaInSession($contentElementUid, $areaName)
+    protected function registerTargetContentAreaInSession_o($contentElementUid, $areaName)
     {
         if ('' === session_id()) {
             session_start();
@@ -697,6 +697,25 @@ class PreviewView
         $_SESSION['target' . $integer] = [$contentElementUid, $areaName];
         return $integer;
     }
+	protected function registerTargetContentAreaInSession($contentElementUid, $areaName) {
+		if ('' === session_id()) {
+			session_start();
+		}
+		if(!is_array($_SESSION['tx_flux']['column_ids'])){
+			$_SESSION['tx_flux']['column_ids'] = [];
+		}
+		$integer = MiscellaneousUtility::generateUniqueIntegerForFluxArea($_SESSION['tx_flux']['column_ids']);
+		if(!isset($_SESSION['tx_flux']['column_ids'][$contentElementUid."_".$areaName])){
+			$_SESSION['tx_flux']['column_ids'][$contentElementUid."_".$areaName] = array(
+				'contentElementUid' => $contentElementUid,
+				'areaName' => $areaName,
+				'sessionAreaIntegerId' => $integer
+			);
+		}else{
+			$integer = $_SESSION['tx_flux']['column_ids'][$contentElementUid."_".$areaName]['sessionAreaIntegerId'];
+		}
+		return $integer;
+	}
 
     /**
      * @param array $row

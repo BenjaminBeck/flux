@@ -40,7 +40,7 @@ class MiscellaneousUtility
      * @param string $areaName
      * @return integer
      */
-    public static function generateUniqueIntegerForFluxArea($contentElementUid, $areaName)
+    public static function generateUniqueIntegerForFluxArea_o($contentElementUid, $areaName)
     {
         foreach (str_split($areaName) as $index => $letter) {
             $position = $index + 1;
@@ -49,6 +49,19 @@ class MiscellaneousUtility
         $integers[] = (int) $contentElementUid;
         $integers[] = self::UNIQUE_INTEGER_OVERHEAD;
         return 0 - array_sum($integers);
+    }
+
+	/**
+     * @param array $columnIds
+     * @return integer
+     */
+    public static function generateUniqueIntegerForFluxArea(array $columnIds)
+    {
+		$integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
+		while(in_array($integer,$columnIds)){
+			$integer = rand(self::UNIQUE_INTEGER_OVERHEAD, 100000+self::UNIQUE_INTEGER_OVERHEAD);
+		}
+		return 0 - $integer;
     }
 
     /**

@@ -230,7 +230,7 @@ class ContentService implements SingletonInterface
         if (false === strpos($relativeTo, 'x')) {
             if (0 - MiscellaneousUtility::UNIQUE_INTEGER_OVERHEAD > $relativeTo) {
                 // Fake relative to value - we can get the target from a session variable
-                list ($parent, $column) = $this->getTargetAreaStoredInSession($relativeTo);
+                list ($parent, $column, $integerId) = $this->getTargetAreaStoredInSession($relativeTo);
                 $row['tx_flux_parent'] = $parent;
                 $row['tx_flux_column'] = $column;
                 $row['sorting'] = $tceMain->getSortNumber('tt_content', 0, $row['pid']);
@@ -429,11 +429,23 @@ class ContentService implements SingletonInterface
      * @param integer $relativeTo
      * @return array
      */
-    protected function getTargetAreaStoredInSession($relativeTo)
+    protected function getTargetAreaStoredInSession_o($relativeTo)
     {
         '' !== session_id() ? : session_start();
         return $_SESSION['target' . $relativeTo];
     }
+
+	protected function getTargetAreaStoredInSession($relativeTo) {
+		'' !== session_id() ? : session_start();
+		foreach($_SESSION['tx_flux']['column_ids'] as $data){
+			if(isset($data['sessionAreaIntegerId']) && $data['sessionAreaIntegerId']==$relativeTo){
+				return array_values($data);
+			}
+		}
+		throw new \Exception('tx_flux: getTargetAreaStoredInSession could not find data in session variable');
+	}
+
+
 
     /**
      * @param integer $uid uid of record in default language

@@ -25,11 +25,15 @@ class WorkspacesAwareRecordService extends RecordService implements SingletonInt
      * @param string $clause
      * @param string $groupBy
      * @param string $orderBy
-     * @param string $limit
+     * @param integer $limit
+     * @param integer $offset
      * @return array|null
      */
-    public function get($table, $fields, $clause = '1=1', $groupBy = '', $orderBy = '', $limit = '')
+    public function get($table, $fields, $clause = null, $groupBy = null, $orderBy = null, int $limit = 0, int $offset = 0)
     {
+        if(null==$clause){
+            $clause='1=1';
+        }
         $records = parent::get($table, $fields, $clause, $groupBy, $orderBy, $limit);
         return null === $records ? null : $this->overlayRecords($table, $records);
     }

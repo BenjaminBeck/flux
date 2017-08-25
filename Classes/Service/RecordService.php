@@ -29,9 +29,10 @@ class RecordService implements SingletonInterface
      * @param string $groupBy
      * @param string $orderBy
      * @param integer $limit
+     * @param integer $offset
      * @return array|NULL
      */
-    public function get($table, $fields, $clause = null, $groupBy = null, $orderBy = null, $limit = 0)
+    public function get($table, $fields, $clause = null, $groupBy = null, $orderBy = null, int $limit = 0, int $offset = 0)
     {
         $statement = $this->getQueryBuilder($table)->from($table)->select(...explode(',', $fields));
 
@@ -44,10 +45,12 @@ class RecordService implements SingletonInterface
         if ($clause) {
             $statement->where($clause);
         }
-        if ($limit) {
+        if ($limit > 0) {
             $statement->setMaxResults($limit);
         }
-
+        if ($offset > 0) {
+            $statement->setFirstResult($offset);
+        }
         return $statement->execute()->fetchAll();
     }
 

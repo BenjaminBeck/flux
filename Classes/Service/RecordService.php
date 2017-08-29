@@ -34,6 +34,14 @@ class RecordService implements SingletonInterface
      */
     public function get($table, $fields, $clause = null, $groupBy = null, $orderBy = null, int $limit = 0, int $offset = 0)
     {
+        if(null==$clause || empty($clause)){
+            // @TODO: test if this is really needed!:
+            // maybe: define a neutral default clause because the later added enabled fields clause ALWAYS begins with 'AND'
+            $clause='1=1';
+        }
+        if(preg_match('/^\s*AND/',$clause)){
+            $clause = preg_replace('/^\s*AND/','',$clause);
+        }
         $statement = $this->getQueryBuilder($table)->from($table)->select(...explode(',', $fields));
 
         if ($groupBy) {

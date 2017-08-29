@@ -31,7 +31,8 @@ class WorkspacesAwareRecordService extends RecordService implements SingletonInt
      */
     public function get($table, $fields, $clause = null, $groupBy = null, $orderBy = null, int $limit = 0, int $offset = 0)
     {
-        if(null==$clause){
+        if(null==$clause || empty($clause)){
+            // define a neutral default clause because the later added enabled fields clause ALWAYS begins with 'AND'
             $clause='1=1';
         }
         $records = parent::get($table, $fields, $clause, $groupBy, $orderBy, $limit);

@@ -116,7 +116,6 @@ class WizardItemsHookSubscriber implements NewContentElementWizardHookInterface
 
         $items = $this->applyWhitelist($items, $whitelist);
         $items = $this->applyBlacklist($items, $blacklist);
-        $items = $this->applyDefaultValues($items, $this->getDefaultValues());
         $items = $this->trimItems($items);
         return HookHandler::trigger(
             HookHandler::ALLOWED_CONTENT_FILTERED,
@@ -163,13 +162,13 @@ class WizardItemsHookSubscriber implements NewContentElementWizardHookInterface
         // Detect what was clicked in order to create the new content element; decide restrictions
         // based on this. Returned parent UID and area name is either non-zero and string, or zero
         // and NULL when record is NOT inserted as child.
-        list ($parentRecordUid, $fluxAreaName) = $this->getAreaNameAndParentFromRelativeRecordOrDefaults($relativeUid);
+        list ($parentRecordUid) = $this->getAreaNameAndParentFromRelativeRecordOrDefaults($relativeUid);
         // if these variables now indicate that we are inserting content elements into a Flux-enabled content
         // area inside another content element, attempt to read allowed/denied content types from the
         // Grid returned by the Provider that applies to the parent element's type and configuration
         // (admitted, that's quite a mouthful - but it's not that different from reading the values from
         // a page template like above; it's the same principle).
-        if (0 < $parentRecordUid && false === empty($fluxAreaName)) {
+        if (0 < $parentRecordUid) {
             $parentRecord = (array) $this->recordService->getSingle('tt_content', '*', $parentRecordUid);
             $contentProviders = $this->configurationService->resolveConfigurationProviders(
                 'tt_content',
@@ -181,8 +180,7 @@ class WizardItemsHookSubscriber implements NewContentElementWizardHookInterface
                 $parentRecord,
                 $whitelist,
                 $blacklist,
-                null,
-                $fluxAreaName
+                $columnPosition
             );
         }
         // White/blacklist filtering. If whitelist contains elements, filter the list
@@ -206,15 +204,13 @@ class WizardItemsHookSubscriber implements NewContentElementWizardHookInterface
             // pasting after another element means we should try to resolve the Flux content relation
             // from that element instead of GET parameters (clicked: "create new" icon after other element)
             $parentRecord = $this->recordService->getSingle('tt_content', '*', abs($relativeUid));
-            $fluxAreaName = (string) $parentRecord['tx_flux_column'];
             $parentRecordUid = (integer) $parentRecord['tx_flux_parent'];
-        } elseif (true === isset($defaultValues['tx_flux_column'])) {
+        } else {
             // attempt to read the target Flux content area from GET parameters (clicked: "create new" icon
             // in top of nested Flux content area
-            $fluxAreaName = (string) $defaultValues['tx_flux_column'];
             $parentRecordUid = (integer) $defaultValues['tx_flux_parent'];
         }
-        return [$parentRecordUid, $fluxAreaName];
+        return [$parentRecordUid];
     }
 
     /**
@@ -258,33 +254,6 @@ class WizardItemsHookSubscriber implements NewContentElementWizardHookInterface
                 }
             }
         }
-    }
-
-    /**
-     * @param array $items
-     * @param array $defaultValues
-     * @return array
-     */
-    protected function applyDefaultValues(array $items, array $defaultValues)
-    {
-        $columnName = rawurlencode($defaultValues['tx_flux_column']);
-        $parentUid = (int) $defaultValues['tx_flux_parent'];
-        foreach ($items as $name => $item) {
-            if (strpos($name, '_') === false) {
-                // Skip header columns, identifiable by not having an underscore in name
-                continue;
-            }
-            if (!is_array($items[$name]['tt_content_defValues'] ?? null)) {
-                $items[$name]['tt_content_defValues'] = [];
-            }
-            if (!empty($columnName) && !empty($parentUid)) {
-                $items[$name]['tt_content_defValues']['tx_flux_column'] = $columnName;
-                $items[$name]['tt_content_defValues']['tx_flux_parent'] = $parentUid;
-                $items[$name]['params'] .= '&defVals[tt_content][tx_flux_column]=' . $columnName;
-                $items[$name]['params'] .= '&defVals[tt_content][tx_flux_parent]=' . $parentUid;
-            }
-        }
-        return $items;
     }
 
     /**

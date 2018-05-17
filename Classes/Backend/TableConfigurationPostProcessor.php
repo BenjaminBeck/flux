@@ -12,6 +12,7 @@ use FluidTYPO3\Flux\Core;
 use FluidTYPO3\Flux\Helper\ContentTypeBuilder;
 use FluidTYPO3\Flux\Provider\Provider;
 use FluidTYPO3\Flux\Provider\ProviderInterface;
+use FluidTYPO3\Flux\Utility\ContextUtility;
 use FluidTYPO3\Flux\Utility\ExtensionNamingUtility;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Database\TableConfigurationPostProcessingHookInterface;
@@ -32,10 +33,19 @@ class TableConfigurationPostProcessor implements TableConfigurationPostProcessin
      */
     public function includeStaticTypoScriptHook(array $parameters, TemplateService $caller)
     {
-        static $called = false;
-        if (!$called) {
-            $this->processData();
-            $called = true;
+        // This method will be called once for every static TS template inclusion. Obviously, we like to avoid spamming
+        // the method (which involves flushing the queued registrations after running them) but because of the way TYPO3
+        // loads TS, we need to do a little juggling first.
+        // The point of this check is to run through all so-called "content rendering templates" which are TS templates
+        // that are specially registered because they must be loaded first. If we can detect that any one of these TS
+        // templates have been loaded, we can safely spool our queued registrations. The result is that these automatic
+        // content type registrations always come immediately after a content rendering template, but will only be
+        // loaded in FE if there actually IS a content template loaded.
+        foreach ($GLOBALS['TYPO3_CONF_VARS']['FE']['contentRenderingTemplates'] ?? [] as $contentRenderingTemplateId) {
+            if ($parameters['templateId'] === 'ext_' . $contentRenderingTemplateId) {
+                // Calling processData also flushes the spooled content type registrations.
+                $this->processData();
+            }
         }
     }
 
@@ -45,6 +55,7 @@ class TableConfigurationPostProcessor implements TableConfigurationPostProcessin
     public function processData()
     {
         $this->spoolQueuedContentTypeRegistrations(Core::getQueuedContentTypeRegistrations());
+        Core::clearQueuedContentTypeRegistrations();
     }
 
     /**
@@ -116,7 +127,7 @@ class TableConfigurationPostProcessor implements TableConfigurationPostProcessin
                 $contentTypeBuilder->registerContentType($controllerExtensionName, $contentType, $provider, $pluginName);
 
             } catch (Exception $error) {
-                if (!Bootstrap::getInstance()->getApplicationContext()->isProduction()) {
+                if (!ContextUtility::getApplicationContext()->isProduction()) {
                     throw $error;
                 }
             }

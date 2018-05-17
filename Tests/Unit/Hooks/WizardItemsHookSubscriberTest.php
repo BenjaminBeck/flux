@@ -135,34 +135,17 @@ class WizardItemsHookSubscriberTest extends AbstractTestCase
     /**
      * @test
      */
-    public function applyDefaultValuesAppliesValues()
-    {
-        $instance = new WizardItemsHookSubscriber();
-        $defaultValues = ['tx_flux_column' => 'foobararea', 'tx_flux_parent' => 321];
-        $items = [
-            'test_test' => ['tt_content_defValues' => [], 'params' => '']
-        ];
-        $result = $this->callInaccessibleMethod($instance, 'applyDefaultValues', $items, $defaultValues);
-        $this->assertEquals($defaultValues['tx_flux_column'], $result['test_test']['tt_content_defValues']['tx_flux_column']);
-        $this->assertEquals($defaultValues['tx_flux_parent'], $result['test_test']['tt_content_defValues']['tx_flux_parent']);
-        $this->assertContains('[tx_flux_column]=foobararea', $result['test_test']['params']);
-        $this->assertContains('[tx_flux_parent]=321', $result['test_test']['params']);
-    }
-
-    /**
-     * @test
-     */
     public function testManipulateWizardItemsWithDefaultValues()
     {
-        $defaultValues = ['tx_flux_column' => 'foobararea', 'tx_flux_parent' => 321];
+        $defaultValues = [];
         $items = [
             ['tt_content_defValues' => [], 'params' => '']
         ];
         $instance = $this->getMockBuilder($this->createInstanceClassName())
             ->setMethods(
                 [
-                    'getDefaultValues', 'getWhiteAndBlackListsFromPageAndContentColumn',
-                    'applyDefaultValues', 'applyWhitelist', 'applyBlacklist', 'trimItems'
+                    'getWhiteAndBlackListsFromPageAndContentColumn',
+                    'applyWhitelist', 'applyBlacklist', 'trimItems'
                 ]
             )
             ->getMock();
@@ -175,46 +158,11 @@ class WizardItemsHookSubscriberTest extends AbstractTestCase
         $GLOBALS['TYPO3_DB']->expects($this->any())->method('exec_SELECTgetSingleRow')->willReturn(null);
         $lists = [[], []];
         $instance->expects($this->once())->method('getWhiteAndBlackListsFromPageAndContentColumn')->will($this->returnValue($lists));
-        $instance->expects($this->once())->method('applyDefaultValues')->will($this->returnValue($items));
         $instance->expects($this->once())->method('applyWhitelist')->will($this->returnValue($items));
         $instance->expects($this->once())->method('applyBlacklist')->will($this->returnValue($items));
         $instance->expects($this->once())->method('trimItems')->will($this->returnValue($items));
-        $instance->expects($this->once())->method('getDefaultValues')->will($this->returnValue($defaultValues));
         $controller = $this->getMockBuilder(NewContentElementController::class)->setMethods(['init'])->disableOriginalConstructor()->getMock();
         $instance->manipulateWizardItems($items, $controller);
         $this->assertNotEmpty($items);
-    }
-
-    /**
-     * @dataProvider getAreaNameAndParentFromRelativeRecordOrDefaults
-     * @param integer $relativeUid
-     * @param array $expected
-     */
-    public function testGetAreaNameAndParentFromRelativeRecordOrDefaults($relativeUid, array $expected)
-    {
-        $defaults = ['tx_flux_column' => 'defaultarea', 'tx_flux_parent' => 999];
-        $inRecord = ['tx_flux_column' => 'recordarea', 'tx_flux_parent' => 111];
-
-        $recordService = $this->getMockBuilder(WorkspacesAwareRecordService::class)->setMethods(['getSingle'])->getMock();
-        $recordService->expects($this->any())->method('getSingle')->willReturn($inRecord);
-
-        $instance = $this->getMockBuilder(WizardItemsHookSubscriber::class)->setMethods(['getDefaultValues'])->getMock();
-        $instance->expects($this->once())->method('getDefaultValues')->willReturn($defaults);
-        $instance->injectRecordService($recordService);
-
-        $result = $this->callInaccessibleMethod($instance, 'getAreaNameAndParentFromRelativeRecordOrDefaults', $relativeUid);
-        $this->assertEquals($expected, $result);
-    }
-
-    /**
-     * @return array
-     */
-    public function getAreaNameAndParentFromRelativeRecordOrDefaults()
-    {
-        return [
-            [0, [999, 'defaultarea']],
-            [1, [999, 'defaultarea']],
-            [-1, [111, 'recordarea']]
-        ];
     }
 }

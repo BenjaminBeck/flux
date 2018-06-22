@@ -3,6 +3,9 @@ if (!defined('TYPO3_MODE')) {
 	die('Access denied.');
 }
 
+$GLOBALS['TYPO3_CONF_VARS']['SYS']['Objects']['TYPO3\\CMS\\Backend\\Domain\\Repository\\Localization\\LocalizationRepository'] = array(
+    'className' => 'FluidTYPO3\\Flux\\Hooks\\BackendLocalizationRepository',
+);
 
 if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL)) {
 

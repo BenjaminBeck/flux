@@ -91,29 +91,37 @@ class TceMain
      */
     public function processDatamap_postProcessFieldArray($status, $table, $id, &$fieldArray, &$reference)
     {
+        $isTablePagesAndTYPO3VersionBelow8 = 'pages' == $table && version_compare(PHP_VERSION, '8', '<');
+        $recordExists = is_integer($id);
 
-        // if record already exists
-        if (is_integer($id)) {
+        if ($recordExists && !$isTablePagesAndTYPO3VersionBelow8) {
+// if record already exists
+            if (is_integer($id)) {
 
-            if (false && isset($GLOBALS['TCA']['pages']['columns']['l18n_parent'])) {
-                $record = $this->recordService->get($table, 'sys_language_uid, l18n_parent', "uid = $id");
-                $recordLanguageUid = $record[0]['sys_language_uid'];
+                if (false && isset($GLOBALS['TCA']['pages']['columns']['l18n_parent'])) {
+                    $record = $this->recordService->get($table, 'sys_language_uid, l18n_parent', "uid = $id");
+                    $recordLanguageUid = $record[0]['sys_language_uid'];
 
-                // BUGFIX Typo3 Issue https://forge.typo3.org/issues/85013
-                if ('tt_content' == $table && !array_key_exists('colPos', $fieldArray)) {
-                    $uidInDefaultLanguage = $record[0]['l18n_parent'];
-                    $fieldArray['colPos'] = (int)($reference->datamap[$table][$uidInDefaultLanguage]['colPos'] ?? 0);
-                }
+                    // BUGFIX Typo3 Issue https://forge.typo3.org/issues/85013
+                    if ('tt_content' == $table && !array_key_exists('colPos', $fieldArray)) {
+                        $uidInDefaultLanguage = $record[0]['l18n_parent'];
+                        $fieldArray['colPos'] = (int)($reference->datamap[$table][$uidInDefaultLanguage]['colPos'] ?? 0);
+                    }
 
-                // BUGFIX IRRE
-                if ($recordLanguageUid == '0') {
-                    $fieldArray['tx_flux_parent'] = ColumnNumberUtility::calculateParentUid($fieldArray['colPos']);
-                } else {
-                    $parentRecordUid = ColumnNumberUtility::calculateParentUid($fieldArray['colPos']);
-                    $parentRecord = $this->recordService->get($table, 'uid', "l18n_parent = $parentRecordUid AND sys_language_uid = $recordLanguageUid");
-                    $fieldArray['tx_flux_parent'] = (int) $parentRecord[0]['uid'];
+                    // BUGFIX IRRE
+                    if ($recordLanguageUid == '0') {
+                        $fieldArray['tx_flux_parent'] = ColumnNumberUtility::calculateParentUid($fieldArray['colPos']);
+                    } else {
+                        $parentRecordUid = ColumnNumberUtility::calculateParentUid($fieldArray['colPos']);
+                        $parentRecord = $this->recordService->get($table, 'uid', "l18n_parent = $parentRecordUid AND sys_language_uid = $recordLanguageUid");
+                        $fieldArray['tx_flux_parent'] = (int) $parentRecord[0]['uid'];
+                    }
                 }
             }
+
         }
+
+
+
     }
 }
